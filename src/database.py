@@ -20,10 +20,13 @@ class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)
-    source = Column(String)       # Ex: site_web, email
-    text_content = Column(Text)   # Le commentaire brut
-    sentiment = Column(String, nullable=True) # Pour plus tard (Positif/Négatif)
-    score = Column(Integer, nullable=True)    # Pour plus tard (Note)
+    source = Column(String)  # Ex: site_web, email
+    text_content = Column(Text)  # Le commentaire brut
+    # --- NOUVEAU ---
+    topic = Column(String, nullable=True)  # Pour stocker "Sujet 1" ou "Logistique"
+    # ----------------
+    sentiment = Column(String, nullable=True)  # Pour plus tard (Positif/Négatif)
+    score = Column(Integer, nullable=True)  # Pour plus tard (Note)
 
 # 3. Fonction d'initialisation
 def init_db():

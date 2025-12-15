@@ -1,55 +1,90 @@
 import re
 import string
 import spacy
+# Il faut installer cette librairie : pip install langdetect
+from langdetect import detect, LangDetectException
 
-# 1. Chargement du modèle français
-# On le charge une seule fois au début du script pour la performance
-# "sm" = Small (rapide)
+# 1. Chargement des DEUX modèles (Français et Anglais)
+# On utilise des variables globales pour les charger une seule fois
 try:
-    nlp = spacy.load("fr_core_news_sm")
-    # On ajoute des mots vides personnalisés si besoin (ex: "client", "avis"...)
-    # nlp.Defaults.stop_words.add("ceci_est_un_test")
+    nlp_fr = spacy.load("fr_core_news_sm")
+    nlp_en = spacy.load("en_core_web_sm")
+    print("✅ Succès : Modèles spaCy (FR + EN) chargés.")
 except OSError:
-    print("Erreur : Le modèle spaCy n'est pas trouvé. As-tu lancé 'python -m spacy download fr_core_news_sm' ?")
+    print("⚠️ ERREUR : Il manque un modèle spaCy.")
+    print("Assure-toi d'avoir lancé :")
+    print("python -m spacy download fr_core_news_sm")
+    print("python -m spacy download en_core_web_sm")
+    # On crée des variables vides pour éviter que le code crashe tout de suite
+    nlp_fr = None
+    nlp_en = None
+
+def detect_language(text):
+    """
+    Détecte la langue du texte (fr ou en).
+    Retourne 'fr' par défaut si le texte est trop court ou bizarre.
+    """
+    try:
+        if not isinstance(text, str) or len(text) < 3:
+            return "fr"
+        return detect(text)
+    except LangDetectException:
+        return "fr"
+    except Exception:
+        return "fr"
 
 def clean_text(text):
     """
-    Pipeline complet de nettoyage NLP :
-    1. Nettoyage Regex (bruit)
-    2. NLP (Tokenisation, Stop-words, Lemmatisation)
+    Pipeline bilingue :
+    1. Détecte la langue
+    2. Sélectionne le bon modèle spaCy (nlp_fr ou nlp_en)
+    3. Nettoie (Tokenisation -> Stop-words -> Lemmatisation)
     """
-    if not isinstance(text, str):
+    # Sécurité : si ce n'est pas du texte
+    if not isinstance(text, str) or len(text) < 2:
         return ""
 
-    # --- ÉTAPE 1 : Nettoyage de surface (Regex) ---
-    text = text.lower() # Minuscules
-    text = re.sub(r'\s+', ' ', text).strip() # Espaces en trop
+    # A. Détection de la langue pour choisir le bon modèle
+    lang = detect_language(text)
+    
+    # B. Sélection du modèle (Routing)
+    # On choisit le modèle anglais SI la langue est 'en' ET que le modèle est bien chargé
+    if lang == 'en' and nlp_en is not None:
+        nlp = nlp_en
+    elif nlp_fr is not None:
+        nlp = nlp_fr
+    else:
+        # Si aucun modèle n'est chargé (problème installation), on fait juste un nettoyage basique
+        return text.lower().strip()
 
-    # --- ÉTAPE 2 : Traitement NLP intelligent avec spaCy ---
-    
-    # On nourrit le modèle avec le texte
-    doc = nlp(text)
-    
-    tokens_propres = []
-    
-    # On parcourt chaque mot (token) identifié par l'IA
-    for token in doc:
-        # Conditions pour GARDER un mot :
-        # 1. Pas un stop-word (le, la, un, du...)
-        # 2. Pas de la ponctuation (!, ?, .)
-        # 3. Plus long que 1 lettre (pour éviter les erreurs)
-        if not token.is_stop and not token.is_punct and len(token.text) > 1:
-            # On prend le LEMME (la racine du mot)
-            # ex: "aimaient" devient "aimer"
-            tokens_propres.append(token.lemma_)
-    
-    # On reconstruit le texte propre (rejoint par des espaces)
-    return " ".join(tokens_propres)
+    # C. Nettoyage Regex (Commun aux deux langues)
+    text = text.lower()
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    # D. Traitement NLP avec spaCy
+    try:
+        doc = nlp(text)
+        tokens_propres = []
+        for token in doc:
+            # On garde le mot si ce n'est pas un stop-word, pas de la ponctuation, et > 1 lettre
+            if not token.is_stop and not token.is_punct and len(token.text) > 1:
+                tokens_propres.append(token.lemma_)
+        
+        return " ".join(tokens_propres)
+    except Exception as e:
+        print(f"Erreur NLP sur le texte : {e}")
+        return text
 
 # --- ZONE DE TEST ---
 if __name__ == "__main__":
-    # Phrase complexe pour tester
-    phrase_test = "Les clients n'ont pas aimé les produits livrés hier !"
+    print("--- Test du module Bilingue ---")
     
-    print(f"Phrase originale : {phrase_test}")
-    print(f"Après nettoyage  : {clean_text(phrase_test)}")
+    phrase_fr = "Les clients n'ont pas aimé les produits livrés hier !"
+    print(f"FR Original : {phrase_fr}")
+    print(f"FR Nettoyé  : {clean_text(phrase_fr)}")
+    
+    print("-" * 20)
+    
+    phrase_en = "The delivery was very slow and I hate this product."
+    print(f"EN Original : {phrase_en}")
+    print(f"EN Nettoyé  : {clean_text(phrase_en)}")

@@ -1,12 +1,9 @@
-
 commentaire,source
 "Ce produit est incroyable, je l'adore !",site_web
 "Livraison très lente et service client absent.",email
+"The delivery was extremely fast, good job!",site_web
+"I hate this product, it is too expensive.",app_mobile
 "Pas mal, mais un peu cher pour la qualité.",site_web
-"Je suis très déçu, ça ne marche pas.",call_center
 "Excellent rapport qualité prix, merci.",site_web
-"L'interface est intuitive mais ça bug parfois.",app_mobile
-"Une catastrophe, fuyez !",email
+"Very bad experience, I will never buy again.",email
 "Service impeccable, comme toujours.",site_web
-"Je ne recommande pas du tout.",site_web
-"C'est exactement ce que je cherchais.",app_mobile
