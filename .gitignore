@@ -1,0 +1,15 @@
+# Ignorer l'environnement virtuel (TRÈS IMPORTANT)
+venv/
+env/
+
+# Ignorer les fichiers temporaires Python
+__pycache__/
+*.pyc
+
+# Ignorer la base de données locale (optionnel, mais recommandé)
+# On préfère que ton ami recrée la DB avec le script
+*.db
+*.sqlite3
+
+# Ignorer les dossiers systèmes
+.DS_Store
